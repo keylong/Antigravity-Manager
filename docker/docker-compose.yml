@@ -8,5 +8,5 @@ services:
       - ~/.antigravity_tools:/root/.antigravity_tools
     environment:
       - LOG_LEVEL=info
-      - API_KEY=your-secret-key  # [重要] 請設置您的安全密鑰，若不設置則在日誌中查看隨機密鑰
+      - API_KEY=sk-cc450487a6fa64840fd7904d9aab4246fe3b883204d1f55579bdb2f4b16c8dce
     restart: unless-stopped
