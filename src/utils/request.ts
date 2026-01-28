@@ -37,6 +37,8 @@ const COMMAND_MAPPING: Record<string, { url: string; method: 'GET' | 'POST' | 'D
   'update_model_mapping': { url: '/api/proxy/mapping', method: 'POST' },
   'generate_api_key': { url: '/api/proxy/api-key/generate', method: 'POST' },
   'clear_proxy_session_bindings': { url: '/api/proxy/session-bindings/clear', method: 'POST' },
+  'clear_proxy_rate_limit': { url: '/api/proxy/rate-limits/:accountId', method: 'DELETE' },
+  'clear_all_proxy_rate_limits': { url: '/api/proxy/rate-limits', method: 'DELETE' },
   'get_preferred_account': { url: '/api/proxy/preferred-account', method: 'GET' },
   'set_preferred_account': { url: '/api/proxy/preferred-account', method: 'POST' },
   'fetch_zai_models': { url: '/api/zai/models/fetch', method: 'POST' },
@@ -95,6 +97,7 @@ const COMMAND_MAPPING: Record<string, { url: string; method: 'GET' | 'POST' | 'D
   'start_oauth_login': { url: '/api/accounts/oauth/start', method: 'POST' },
   'complete_oauth_login': { url: '/api/accounts/oauth/complete', method: 'POST' },
   'cancel_oauth_login': { url: '/api/accounts/oauth/cancel', method: 'POST' },
+  'submit_oauth_code': { url: '/api/accounts/oauth/submit-code', method: 'POST' },
 
   // Import
   'import_v1_accounts': { url: '/api/accounts/import/v1', method: 'POST' },

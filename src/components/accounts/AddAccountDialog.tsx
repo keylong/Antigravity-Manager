@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Database, Globe, FileClock, Loader2, CheckCircle2, XCircle, Copy, Check, Info } from 'lucide-react';
+import { Plus, Database, Globe, FileClock, Loader2, CheckCircle2, XCircle, Copy, Check, Info, Link2 } from 'lucide-react';
 import { useAccountStore } from '../../stores/useAccountStore';
 import { useTranslation } from 'react-i18next';
 import { listen } from '@tauri-apps/api/event';
@@ -23,6 +23,7 @@ function AddAccountDialog({ onAdd }: AddAccountDialogProps) {
     const [refreshToken, setRefreshToken] = useState('');
     const [oauthUrl, setOauthUrl] = useState('');
     const [oauthUrlCopied, setOauthUrlCopied] = useState(false);
+    const [manualCode, setManualCode] = useState('');
 
     // UI State
     const [status, setStatus] = useState<Status>('idle');
@@ -362,6 +363,41 @@ function AddAccountDialog({ onAdd }: AddAccountDialogProps) {
         }
     };
 
+    const handleManualSubmit = async () => {
+        if (!manualCode.trim()) return;
+
+        setStatus('loading');
+        setMessage(t('accounts.add.oauth.manual_submitting', '正在提交授权码...') || 'Submitting code...');
+
+        try {
+            await invoke('submit_oauth_code', { code: manualCode.trim(), state: null });
+
+            // 提交成功反馈
+            setStatus('success');
+            setMessage(t('accounts.add.oauth.manual_submitted', '授权码已提交，后台正在处理并刷新列表') || 'Code submitted! Backend is processing...');
+
+            setManualCode('');
+
+            // 对齐 Web 模式下的刷新逻辑
+            if (!isTauri()) {
+                setTimeout(async () => {
+                    await fetchAccounts();
+                    setIsOpen(false);
+                    resetState();
+                }, 2000);
+            }
+        } catch (error) {
+            let errStr = String(error);
+            if (errStr.includes("No active OAuth flow")) {
+                setMessage(t('accounts.add.oauth.error_no_flow'));
+                setStatus('error');
+            } else {
+                setMessage(`${t('common.error')}: ${errStr}`);
+                setStatus('error');
+            }
+        }
+    };
+
     const handleImportDb = () => {
         handleAction(t('accounts.add.tabs.import'), importFromDb);
     };
@@ -548,6 +584,32 @@ function AddAccountDialog({ onAdd }: AddAccountDialogProps) {
                                                 </button>
                                             </div>
                                         )}
+
+                                        {/* Manual Code Entry - Always enabled to rescue stuck flows */}
+                                        <div className="pt-4 mt-2 border-t border-gray-100 dark:border-base-200">
+                                            <div className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wider">
+                                                {t('accounts.add.oauth.manual_hint')}
+                                            </div>
+                                            <div className="relative group/manual flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <input
+                                                        type="text"
+                                                        className="w-full text-xs py-2 px-3 bg-white dark:bg-base-100 border border-gray-200 dark:border-base-300 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                                                        placeholder={t('accounts.add.oauth.manual_placeholder')}
+                                                        value={manualCode}
+                                                        onChange={(e) => setManualCode(e.target.value)}
+                                                    />
+                                                </div>
+                                                <button
+                                                    className="px-4 py-2 bg-neutral text-white dark:bg-white dark:text-neutral text-xs font-semibold rounded-xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex items-center gap-1.5"
+                                                    onClick={handleManualSubmit}
+                                                    disabled={!manualCode.trim()}
+                                                >
+                                                    <Link2 className="w-3.5 h-3.5" />
+                                                    {t('common.submit')}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -650,9 +712,10 @@ function AddAccountDialog({ onAdd }: AddAccountDialogProps) {
                             )}
                         </div>
                     </div>
-                </div>,
+                </div >,
                 document.body
-            )}
+            )
+            }
         </>
     );
 }
